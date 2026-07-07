@@ -136,7 +136,7 @@ touch_coordtext_v8_dataloader = L(DataLoader)(
 
 
 touch_coordtext_v7_dataset = L(_TouchCTDS)(
-    data_dir="/cephfs/shared/lyuxueguang/WAM_Experiments/runtime/touch_in_order_v7_isolated/data/v7_full/train", t5_cache="/cephfs/shared/lyuxueguang/WAM_Experiments/runtime/touch_in_order_v7_isolated/data/v7_full/t5_embeddings_coords.pkl",
+    data_dir="/cephfs/shared/lyuxueguang/WAM_Experiments/runtime/touch_in_order_v7_isolated/data/v7_full/train", t5_cache="/cephfs/shared/lyuxueguang/WAM_Experiments/runtime/touch_in_order_v7_isolated/data/v7_full/t5_embeddings_coords_masked.pkl",
     num_frames=13, video_size=(256, 256), max_shards=999,
 )
 touch_coordtext_v7_dataloader = L(DataLoader)(
