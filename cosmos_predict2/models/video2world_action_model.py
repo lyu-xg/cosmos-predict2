@@ -62,6 +62,7 @@ class Predict2Video2WorldActionConditionedModel(Predict2Video2WorldModel):
         self.pipe = Video2WorldActionConditionedPipeline.from_config(
             config.pipe_config,
             dit_path=config.model_manager_config.dit_path,
+            use_text_encoder=False,  # Luke: we feed precomputed (zeroed) t5_text_embeddings; no live T5
         )
 
         self.freeze_parameters()

@@ -286,6 +286,49 @@ _PREDICT2_MULTIVIEW_FSDP_2B_720P_10FPS_7VIEWS_29FRAMES = dict(
 )
 
 
+
+# ===== Touch Cosmos-Policy (Luke): plain video2world 2B + our TouchCosmosPolicyModel (action-as-latent-frame) =====
+import sys as _sys
+_sys.path.insert(0, "/cephfs/shared/lyuxueguang/cosmos_touch")
+from policy_model import TouchCosmosPolicyModel as _TouchPolicyModel
+_TOUCH_PC = get_cosmos_predict2_video2world_pipeline(model_size="2B", resolution="480", fps=16)
+_TOUCH_PC.state_t = 4  # short touch video (~13 pixel frames -> 4 latent)
+_TOUCH_PC.guardrail_config.enabled = False  # Luke: no content guardrail for training
+_TOUCH_COSMOS_POLICY_2B = dict(
+    trainer=dict(distributed_parallelism="fsdp"),
+    model=L(_TouchPolicyModel)(
+        config=Predict2Video2WorldModelConfig(
+            pipe_config=_TOUCH_PC,
+            model_manager_config=L(Predict2ModelManagerConfig)(
+                dit_path="/cephfs/gyshare/lyuxueguang/cosmos_weights/nvidia/Cosmos-Predict2-2B-Video2World/model-480p-16fps.pt",
+                text_encoder_path="",
+            ),
+            fsdp_shard_size=-1,
+            high_sigma_ratio=0.05,
+        ),
+        _recursive_=False,
+    ),
+)
+
+_TOUCH_PC_ICL = get_cosmos_predict2_video2world_pipeline(model_size="2B", resolution="480", fps=16)
+_TOUCH_PC_ICL.state_t = 8  # 4 demo latents + 4 current latents
+_TOUCH_PC_ICL.guardrail_config.enabled = False
+_TOUCH_COSMOS_POLICY_ICL_2B = dict(
+    trainer=dict(distributed_parallelism="fsdp"),
+    model=L(_TouchPolicyModel)(
+        config=Predict2Video2WorldModelConfig(
+            pipe_config=_TOUCH_PC_ICL,
+            model_manager_config=L(Predict2ModelManagerConfig)(
+                dit_path="/cephfs/gyshare/lyuxueguang/cosmos_weights/nvidia/Cosmos-Predict2-2B-Video2World/model-480p-16fps.pt",
+                text_encoder_path="",
+            ),
+            fsdp_shard_size=-1,
+            high_sigma_ratio=0.05,
+        ),
+        _recursive_=False,
+    ),
+)
+
 def register_model() -> None:
     cs = ConfigStore.instance()
     # predict2 t2i 2b model
@@ -294,6 +337,8 @@ def register_model() -> None:
     cs.store(group="model", package="_global_", name="predict2_text2image_fsdp_14b", node=_PREDICT2_TEXT2IMAGE_FSDP_14B)
     # predict2 v2w 2b model (default 720p, 16fps)
     cs.store(group="model", package="_global_", name="predict2_video2world_fsdp_2b", node=_PREDICT2_VIDEO2WORLD_FSDP_2B)
+    cs.store(group="model", package="_global_", name="touch_cosmos_policy_fsdp_2b", node=_TOUCH_COSMOS_POLICY_2B)
+    cs.store(group="model", package="_global_", name="touch_cosmos_policy_icl_fsdp_2b", node=_TOUCH_COSMOS_POLICY_ICL_2B)
     # predict2 v2w 14b model (default 720p, 16fps)
     cs.store(
         group="model", package="_global_", name="predict2_video2world_fsdp_14b", node=_PREDICT2_VIDEO2WORLD_FSDP_14B

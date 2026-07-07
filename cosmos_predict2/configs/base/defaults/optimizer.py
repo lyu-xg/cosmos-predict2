@@ -59,6 +59,8 @@ def get_base_optimizer_simple(
 
     if optim_type == "adamw":
         opt_cls = torch.optim.AdamW
+        for _k in ("master_weights", "capturable", "set_grad_none"):  # Luke: FusedAdam-only kwargs torch.AdamW rejects
+            kwargs.pop(_k, None)
     elif optim_type == "fusedadam":
         opt_cls = FusedAdam
     else:
@@ -83,6 +85,17 @@ FusedAdamWConfig: LazyDict[torch.optim.Optimizer] = L(get_base_optimizer)(
 )
 
 
+AdamWConfig: LazyDict[torch.optim.Optimizer] = L(get_base_optimizer)(
+    model=PLACEHOLDER,
+    lr=1e-4,
+    weight_decay=0.1,
+    betas=[0.9, 0.99],
+    optim_type="adamw",
+    eps=1e-8,
+)
+
+
 def register_optimizer():
     cs = ConfigStore.instance()
     cs.store(group="optimizer", package="optimizer", name="fusedadamw", node=FusedAdamWConfig)
+    cs.store(group="optimizer", package="optimizer", name="adamw", node=AdamWConfig)
